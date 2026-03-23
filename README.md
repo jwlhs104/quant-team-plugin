@@ -2,13 +2,28 @@
 
 量化研究團隊共享 Claude Code Plugin — 台股分析、券商報告、回測、產業掃描、安全護欄。
 
-> 本 plugin 整合了原 [claude-plugin-taiwan-stocks](https://github.com/jwlhs104/claude-plugin-taiwan-stocks) 的所有功能，並新增 hooks 與更多 skills。
+> 本 plugin 整合了原 [claude-plugin-taiwan-stocks](https://github.com/jwlhs104/claude-plugin-taiwan-stocks) 的所有功能，並新增 subagents、hooks 與更多 skills。
 
 ## 使用方式
 
 ```bash
+# 1. Clone
+git clone https://github.com/jwlhs104/quant-team-plugin.git
+
+# 2. 設定券商報告資料路徑（放你的 reports/ 和 reports.db 的目錄）
+export BROKER_DATA_PATH=/path/to/your/broker-data
+
+# 3. 啟動
 claude --plugin-dir /path/to/quant-team-plugin
 ```
+
+## Subagents（3 個）
+
+| Agent | 說明 | 工具限制 | 記憶 |
+|---|---|---|---|
+| `quant-team:stock-researcher` | 唯讀研究員 — 搜券商報告、新聞、基本面 | 只能讀取和搜尋 | user（跨專案） |
+| `quant-team:backtest-runner` | 回測執行員 — 跑腳本、讀結果 | 不能寫入檔案 | 無 |
+| `quant-team:report-writer` | 報告撰寫員 — 產生結構化投資報告 | 可寫入 docs/ | project（記住團隊慣例） |
 
 ## Skills（8 個）
 
@@ -32,26 +47,41 @@ claude --plugin-dir /path/to/quant-team-plugin
 
 ## MCP Servers
 
-| Server | 說明 |
-|---|---|
-| `broker-reports` | 券商報告搜尋引擎（需設定 `BROKER_REPORTS_PATH` 環境變數） |
+| Server | 說明 | 程式碼位置 |
+|---|---|---|
+| `broker-reports` | 券商報告搜尋引擎（8000+ 份報告） | `servers/broker-reports/` |
 
 ## 環境變數
 
 | 變數 | 說明 |
 |---|---|
-| `BROKER_REPORTS_PATH` | broker-reports MCP server 的路徑 |
+| `BROKER_DATA_PATH` | 券商報告資料目錄（放 `reports/` 和 `reports.db` 的位置） |
 
-## 安裝到團隊專案
+## 新增 MCP Server
 
-```bash
-# 方法 1：--plugin-dir（開發/測試）
-claude --plugin-dir ./quant-team-plugin
+將新的 server 程式碼放在 `servers/<name>/`，然後在 `.mcp.json` 加一筆：
 
-# 方法 2：marketplace 安裝（正式使用）
-claude plugin install quant-team
+```json
+{
+  "new-server": {
+    "command": "python",
+    "args": ["-m", "src.server"],
+    "cwd": "${CLAUDE_PLUGIN_ROOT}/servers/new-server"
+  }
+}
 ```
 
-## 從 taiwan-stocks 遷移
+## 專案結構
 
-本 plugin 完全取代 `claude-plugin-taiwan-stocks`，包含其所有 skills + 額外的回測、報告、漲停分析 skills 與安全 hooks。
+```
+quant-team-plugin/
+├── .claude-plugin/plugin.json     ← Plugin 描述
+├── .mcp.json                      ← MCP server 串接設定
+├── agents/                        ← 3 個 subagents
+├── hooks/                         ← 2 個 hooks + 腳本
+├── skills/                        ← 8 個 skills
+└── servers/                       ← MCP server 程式碼（mono repo）
+    └── broker-reports/
+        ├── src/                   ← server 程式碼
+        └── config.yaml            ← server 設定
+```
