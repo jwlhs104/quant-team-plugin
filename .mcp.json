@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "broker-reports": {
+      "command": "bash",
+      "args": ["-c", "cd \"$BROKER_REPORTS_PATH\" && python -m src.server"],
+      "env": {
+        "BROKER_REPORTS_PATH": "${BROKER_REPORTS_PATH}"
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "quant-team",
+  "description": "量化研究團隊工作流 — 台股分析、券商報告、回測、產業掃描、安全護欄",
+  "version": "1.0.0",
+  "author": {
+    "name": "ccbot team"
+  }
+}
