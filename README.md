@@ -10,12 +10,29 @@
 # 1. Clone
 git clone https://github.com/jwlhs104/quant-team-plugin.git
 
-# 2. 設定券商報告資料路徑（放你的 reports/ 和 reports.db 的目錄）
-export BROKER_DATA_PATH=/path/to/your/broker-data
+# 2. 設定 MCP Server URL（指向團隊部署的券商報告 MCP server）
+export BROKER_REPORTS_URL=http://192.168.1.100:8100/mcp
 
 # 3. 啟動
 claude --plugin-dir /path/to/quant-team-plugin
 ```
+
+## Server 端部署
+
+本 plugin 的 MCP server 已改為遠端架構（Streamable HTTP），不再隨 plugin 一起打包。
+團隊需自行部署 MCP server，plugin 端只需設定 `BROKER_REPORTS_URL` 環境變數指向該 server。
+
+**部署步驟：**
+
+1. 在 server 機器上部署 `broker-reports` MCP server（獨立 repo 或 Docker image）
+2. 確保 server 監聽在團隊可存取的位址，例如 `http://192.168.1.100:8100/mcp`
+3. 每位團隊成員設定環境變數：
+   ```bash
+   export BROKER_REPORTS_URL=http://<server-ip>:8100/mcp
+   ```
+4. 啟動 Claude Code 即可自動連線
+
+> 如果是本機開發測試，可以把 server 跑在 localhost：`export BROKER_REPORTS_URL=http://localhost:8100/mcp`
 
 ## Subagents（3 個）
 
@@ -47,41 +64,23 @@ claude --plugin-dir /path/to/quant-team-plugin
 
 ## MCP Servers
 
-| Server | 說明 | 程式碼位置 |
+| Server | 說明 | 連線方式 |
 |---|---|---|
-| `broker-reports` | 券商報告搜尋引擎（8000+ 份報告） | `servers/broker-reports/` |
+| `broker-reports` | 券商報告搜尋引擎（8000+ 份報告） | 遠端 Streamable HTTP（需設定 `BROKER_REPORTS_URL`） |
 
 ## 環境變數
 
 | 變數 | 說明 |
 |---|---|
-| `BROKER_DATA_PATH` | 券商報告資料目錄（放 `reports/` 和 `reports.db` 的位置） |
-
-## 新增 MCP Server
-
-將新的 server 程式碼放在 `servers/<name>/`，然後在 `.mcp.json` 加一筆：
-
-```json
-{
-  "new-server": {
-    "command": "python",
-    "args": ["-m", "src.server"],
-    "cwd": "${CLAUDE_PLUGIN_ROOT}/servers/new-server"
-  }
-}
-```
+| `BROKER_REPORTS_URL` | 券商報告 MCP server 的 URL（例如 `http://192.168.1.100:8100/mcp`） |
 
 ## 專案結構
 
 ```
 quant-team-plugin/
-├── .claude-plugin/plugin.json     ← Plugin 描述
-├── .mcp.json                      ← MCP server 串接設定
-├── agents/                        ← 3 個 subagents
-├── hooks/                         ← 2 個 hooks + 腳本
-├── skills/                        ← 8 個 skills
-└── servers/                       ← MCP server 程式碼（mono repo）
-    └── broker-reports/
-        ├── src/                   ← server 程式碼
-        └── config.yaml            ← server 設定
+├── .claude-plugin/plugin.json     <- Plugin 描述
+├── .mcp.json                      <- MCP server 連線設定（遠端）
+├── agents/                        <- 3 個 subagents
+├── hooks/                         <- 2 個 hooks + 腳本
+└── skills/                        <- 8 個 skills
 ```

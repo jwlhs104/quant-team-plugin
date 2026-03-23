@@ -1,12 +1,8 @@
 {
   "mcpServers": {
     "broker-reports": {
-      "command": "python",
-      "args": ["-m", "src.server"],
-      "cwd": "${CLAUDE_PLUGIN_ROOT}/servers/broker-reports",
-      "env": {
-        "BROKER_DATA_PATH": "${BROKER_DATA_PATH}"
-      }
+      "type": "url",
+      "url": "${BROKER_REPORTS_URL}"
     }
   }
 }
